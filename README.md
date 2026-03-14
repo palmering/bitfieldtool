@@ -1,4 +1,3 @@
-![License](https://img.shields.io/github/license/palmering/bitfieldtool?color=blue)
 ![Stars](https://img.shields.io/github/stars/palmering/bitfieldtool?style=social)
 ![Top Language](https://img.shields.io/github/languages/top/palmering/bitfieldtool)
 # 🛠️ Bit Field Tool
