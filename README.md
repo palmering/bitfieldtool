@@ -1,7 +1,5 @@
 BIT FIELD TOOL
 
-Here is the professional English translation for your tool's interface and documentation:
-
 This tool allows you to view and configure registers up to 32 bits.
 
 How to use:
