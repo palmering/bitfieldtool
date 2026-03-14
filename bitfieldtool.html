@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BitTool - Pro Compact with Export</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --accent: #38bdf8;
+            --text: #f1f5f9; --dim: #94a3b8; --border: #334155;
+            --field-bg: rgba(56, 189, 248, 0.15);
+            --cell-w: 35px;
+        }
+
+        body { 
+            background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; 
+            padding: 20px; display: flex; flex-direction: column; align-items: center; 
+            min-width: 1200px;
+        }
+
+        .toolbar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            background: var(--border);
+            color: var(--text);
+            border: 1px solid var(--accent);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Inter';
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn:hover { background: var(--accent); color: var(--bg); }
+        
+        .hoverTable { 
+            background: var(--card); border-spacing: 3px; border-collapse: separate; 
+            border-radius: 12px; padding: 25px; border: 1px solid var(--border); 
+            box-shadow: 0 15px 30px -10px rgba(0,0,0,0.7); user-select: none;
+            table-layout: fixed; width: auto;
+        }
+
+        td { width: var(--cell-w); overflow: hidden; vertical-align: middle; }
+
+        .rawnubbleno { 
+            font-family: 'JetBrains Mono'; font-size: 32pt; color: var(--accent); 
+            text-align: center; padding: 12px 0; font-weight: 700;
+        }
+
+        .rawbitno { 
+            font-family: 'JetBrains Mono'; font-size: 11px; color: var(--dim); 
+            text-align: center; padding: 10px 0; border-radius: 4px;
+        }
+
+        .field { height: 40px; cursor: crosshair; background: #172033; border: 1px solid var(--border); border-radius: 4px; }
+        .field.active { background: var(--accent) !important; box-shadow: 0 0 10px var(--accent); }
+
+        .dynamic-field { 
+            background: var(--field-bg) !important; 
+            border: 2px solid var(--accent) !important;
+            text-align: center; font-family: 'JetBrains Mono';
+            padding: 10px 2px; color: var(--accent); font-weight: bold;
+            position: relative; cursor: pointer; border-radius: 8px;
+        }
+        
+        .field-name { 
+            display: block; margin-bottom: 4px; 
+            font-size: 18px; 
+            text-transform: uppercase; letter-spacing: 1px; color: #fff;
+        }
+        .val-display { font-size: 11px; color: var(--accent); font-weight: normal; }
+
+        .delete-btn { position: absolute; top: 2px; right: 5px; color: var(--dim); font-size: 16px; cursor: pointer; }
+
+        input[type="checkbox"] { 
+            cursor: pointer; accent-color: var(--accent); transform: scale(1.4); 
+            display: block; margin: 15px auto; 
+        }
+        
+        #bigentry { 
+            width: 100%; background: #0f172a; border: 2px solid var(--border); 
+            color: var(--accent); padding: 15px; font-family: 'JetBrains Mono'; 
+            font-size: 24px; text-align: center; border-radius: 10px; outline: none; 
+            box-sizing: border-box; margin-top: 15px;
+        }
+
+        .headerfield { 
+            width: 120px; font-size: 11px; color: var(--dim); padding-left: 20px; 
+            text-transform: uppercase; font-weight: 700; letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button class="btn" onclick="exportImage()">📸 Export Snapshot</button>
+    <button class="btn" style="border-color: #f87171;" onclick="clearAll()">🗑 Clear All</button>
+</div>
+
+<div id="exportArea">
+    <table class="hoverTable" id="bitTable">
+        <tr>
+            <script>for(let i=7; i>=0; i--) document.write(`<td id="nibble_${i}" colspan=4 class="rawnubbleno">0</td>`);</script>
+            <td class="headerfield">HEXADECIMAL</td>
+        </tr>
+
+        <tr>
+            <script>
+                for(let i=31; i>=0; i--) {
+                    let bg = (Math.floor(i/4) % 2 == 0) ? "#1e293b" : "#2a374a";
+                    document.write(`<td id="rawno_${i}" style="background-color:${bg}" class="rawbitno">${i}</td>`);
+                }
+            </script>
+            <td class="headerfield">BIT INDEX</td>
+        </tr>
+
+        <tr id="dragrow">
+            <script>for(let i=31; i>=0; i--) document.write(`<td id="df_${i}" class="field" onmousedown="startDrag(${i})" onmouseenter="doDrag(${i})" onmouseup="endDrag()"></td>`);</script>
+            <td class="headerfield">MASK</td>
+        </tr>
+
+        <tr id="fieldrow">
+            <td colspan="32" class="dynamic-field" style="background:transparent !important; border:none !important; color:var(--dim); padding: 30px; font-size: 14px;">Drag SELECT to define fields</td>
+            <td class="headerfield" style="font-size: 14px; color: var(--accent);">SUB-FIELDS</td>
+        </tr>
+
+        <tr>
+            <script>for(let i=31; i>=0; i--) document.write(`<td><input type="checkbox" id="cb_${i}" onclick="updateFromBits()"></td>`);</script>
+            <td class="headerfield">BINARY</td>
+        </tr>
+
+        <tr>
+            <td colspan="32">
+                <input id="bigentry" oninput="updateFromInput()" placeholder="0x... or decimal">
+            </td>
+            <td class="headerfield">INPUT</td>
+        </tr>
+    </table>
+</div>
+
+<div style="width: 100%; max-width: 1200px; margin-top: 20px; position: relative;">
+    <div style="position: relative;">
+        <textarea id="macroPreview" readonly 
+            style="width: 100%; height: 180px; background: #0b1121; border: 1px solid var(--border); border-radius: 8px; color: #a5b4fc; font-family: 'JetBrains Mono'; padding: 15px; font-size: 13px; resize: none; box-sizing: border-box; display: block;"></textarea>
+        
+        <button class="btn" id="copyBtn" onclick="copyMacros()" 
+            style="position: absolute; top: 10px; right: 10px; padding: 5px 12px; font-size: 11px; background: rgba(56, 189, 248, 0.1); backdrop-filter: blur(4px);">
+            Copy Macros
+        </button>
+    </div>
+</div>
+
+<script>
+    let isDragging = false;
+    let startBit = null;
+    let fields = []; 
+    let currentVal = 0n;
+
+    function startDrag(i) { isDragging = true; startBit = i; updateDragVisuals(i); }
+    function doDrag(i) { if(isDragging) updateDragVisuals(i); }
+
+    function updateDragVisuals(current) {
+        let min = Math.min(startBit, current), max = Math.max(startBit, current);
+        for(let i=0; i<32; i++) {
+            document.getElementById(`df_${i}`).classList.toggle('active', i >= min && i <= max);
+        }
+    }
+
+    function endDrag() {
+        if(!isDragging) return;
+        let activeIndices = [];
+        for(let i=0; i<32; i++) {
+            if(document.getElementById(`df_${i}`).classList.contains('active')) activeIndices.push(i);
+        }
+        
+        if(activeIndices.length > 0) {
+            let high = Math.max(...activeIndices);
+            let low = Math.min(...activeIndices);
+    
+            // Check for overlap before creating
+            const overlap = fields.some(f => (low <= f.high && high >= f.low));
+            
+            if (overlap) {
+                alert("Overlap detected! Choose an empty bit range.");
+            } else {
+                let name = prompt("Name this field:", `FIELD_${fields.length + 1}`);
+                if(name) {
+                    fields.push({ high, low, name });
+                    renderFields();
+                }
+            }
+        }
+        isDragging = false;
+        for(let i=0; i<32; i++) document.getElementById(`df_${i}`).classList.remove('active');
+    }
+
+    function editFieldValue(idx) {
+        let f = fields[idx];
+        let width = f.high - f.low + 1;
+        let mask = (1n << BigInt(width)) - 1n;
+        let currentFVal = (currentVal >> BigInt(f.low)) & mask;
+    
+        let input = prompt(`Enter HEX or DEC value for ${f.name} (Max: 0x${mask.toString(16)}):`, `0x${currentFVal.toString(16)}`);
+        
+        if (input !== null && input !== "") {
+            try {
+                let newVal = input.toLowerCase().startsWith('0x') ? BigInt(input) : BigInt(input);
+                
+                if (newVal > mask) {
+                    alert(`Value too large! Max for this field is 0x${mask.toString(16)}`);
+                    return;
+                }
+    
+                // Clear the field bits then OR the new value in
+                let clearedVal = currentVal & ~(mask << BigInt(f.low));
+                let finalVal = clearedVal | (newVal << BigInt(f.low));
+                
+                sync(finalVal);
+                document.getElementById('bigentry').value = "0x" + finalVal.toString(16).toUpperCase();
+            } catch(e) {
+                alert("Invalid number format.");
+            }
+        }
+    }
+		        
+    function renderFields() {
+        const row = document.getElementById('fieldrow');
+        row.innerHTML = '';
+        
+        // Sort fields descending (31 -> 0)
+        let sortedFields = [...fields].sort((a, b) => b.high - a.high);
+        let currentBit = 31;
+    
+        sortedFields.forEach((f) => {
+            // 1. Spacer for gaps
+            if (currentBit > f.high) {
+                let spacer = document.createElement('td');
+                spacer.colSpan = currentBit - f.high;
+                spacer.style.border = "none";
+                row.appendChild(spacer);
+            }
+    
+            // 2. The Field Cell
+            let width = f.high - f.low + 1;
+            let td = document.createElement('td');
+            td.colSpan = width;
+            td.className = 'dynamic-field';
+            
+            let mask = (1n << BigInt(width)) - 1n;
+            let fVal = (currentVal >> BigInt(f.low)) & mask;
+            
+            td.innerHTML = `
+                <span class="delete-btn">&times;</span>
+                <span class="field-name">${f.name}</span>
+                <div class="val-display">0x${fVal.toString(16).toUpperCase()}</div>
+            `;
+    
+            // Logic: Delete
+            td.querySelector('.delete-btn').onclick = (e) => {
+                e.stopPropagation();
+                deleteField(fields.indexOf(f));
+            };
+    
+            // Logic: Edit Value
+            td.onclick = () => editFieldValue(fields.indexOf(f));
+    
+            // Logic: Rename
+            td.oncontextmenu = (e) => {
+                e.preventDefault();
+                renameField(fields.indexOf(f));
+            };
+    
+            row.appendChild(td);
+            currentBit = f.low - 1;
+        });
+    
+        // 3. Final Spacer
+        if (currentBit >= 0) {
+            let spacer = document.createElement('td');
+            spacer.colSpan = currentBit + 1;
+            spacer.style.border = "none";
+            row.appendChild(spacer);
+        }
+    
+        if(fields.length === 0) {
+            row.innerHTML = '<td colspan="32" class="dynamic-field" style="background:transparent !important; border:none !important; color:var(--dim); padding: 30px;">Drag above to create bit-fields</td>';
+        }
+        
+        // 4. Re-add the "SUB-FIELDS" label
+        let label = document.createElement('td');
+        label.className = 'headerfield';
+        label.style.color = 'var(--accent)';
+        label.innerText = 'SUB-FIELDS';
+        row.appendChild(label);
+				updateMacroPreview();
+    }
+    
+    function updateMacroPreview() {
+        const preview = document.getElementById('macroPreview');
+        if (fields.length === 0) {
+            preview.value = "// Define fields by dragging across the MASK row...";
+            return;
+        }
+    
+        let output = "/* Register Bitfield Definitions */\n";
+        let previewFields = [...fields].sort((a, b) => b.high - a.high);
+        
+        previewFields.forEach(f => {
+            let width = f.high - f.low + 1;
+            let mask = (1n << BigInt(width)) - 1n;
+            let hexMask = "0x" + (mask << BigInt(f.low)).toString(16).toUpperCase();
+            let fieldName = f.name.toUpperCase().replace(/\s+/g, '_');
+            
+            output += `\n#define ${fieldName}_MASK  ${hexMask}\n`;
+            output += `#define ${fieldName}_SHIFT ${f.low}\n`;
+        });
+    
+        preview.value = output;
+    }
+    		
+    function editFieldValue(idx) {
+        let f = fields[idx];
+        let width = f.high - f.low + 1;
+        let mask = (1n << BigInt(width)) - 1n;
+        let currentFVal = (currentVal >> BigInt(f.low)) & mask;
+    
+        let input = prompt(`Enter value for ${f.name} (Max: 0x${mask.toString(16)}):`, `0x${currentFVal.toString(16)}`);
+        
+        if (input !== null && input.trim() !== "") {
+            try {
+                let newVal = input.toLowerCase().startsWith('0x') ? BigInt(input) : BigInt(input);
+                
+                if (newVal > mask) {
+                    alert(`Value 0x${newVal.toString(16)} is too large for ${width} bits!`);
+                    return;
+                }
+    
+                let clearedVal = currentVal & ~(mask << BigInt(f.low));
+                let finalVal = clearedVal | (newVal << BigInt(f.low));
+                
+                sync(finalVal);
+                document.getElementById('bigentry').value = "0x" + finalVal.toString(16).toUpperCase();
+            } catch(e) {
+                alert("Invalid input format.");
+            }
+        }
+    }
+    
+    function copyMacros() {
+        const preview = document.getElementById('macroPreview');
+        const btn = document.getElementById('copyBtn');
+        
+        if (fields.length === 0) {
+            alert("No fields defined to copy!");
+            return;
+        }
+        
+        navigator.clipboard.writeText(preview.value).then(() => {
+            const originalText = "Copy Macros";
+            btn.innerText = "Copied!";
+            btn.style.borderColor = "#4ade80"; // Green success border
+            btn.style.color = "#4ade80";
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.borderColor = "var(--accent)";
+                btn.style.color = "var(--text)";
+            }, 2000);
+        });
+    }
+        
+    function renameField(idx) {
+        let newName = prompt("Rename field:", fields[idx].name);
+        if(newName) { fields[idx].name = newName; renderFields(); }
+    }
+
+    function deleteField(idx) {
+        fields.splice(idx, 1);
+        renderFields();
+    }
+
+    function updateFromBits() {
+        let val = 0n;
+        for(let i=0; i<32; i++) if(document.getElementById(`cb_${i}`).checked) val |= (1n << BigInt(i));
+        sync(val);
+    }
+
+    function updateFromInput() {
+        try {
+            let input = document.getElementById('bigentry').value;
+            if(!input) return;
+            let val = input.toLowerCase().startsWith('0x') ? BigInt(input) : BigInt(input);
+            sync(val);
+        } catch(e) {}
+    }
+
+    function sync(val) {
+        currentVal = val & 0xFFFFFFFFn;
+        let hex = currentVal.toString(16).padStart(8, '0').toUpperCase();
+        for(let i=0; i<8; i++) document.getElementById(`nibble_${7-i}`).innerText = hex[i];
+        for(let i=0; i<32; i++) document.getElementById(`cb_${i}`).checked = !!(currentVal & (1n << BigInt(i)));
+        renderFields();
+    }
+
+    function clearAll() {
+        fields = [];
+        document.getElementById('bigentry').value = '';
+        sync(0n);
+    }
+
+    function exportImage() {
+        const target = document.getElementById('exportArea');
+        html2canvas(target, { backgroundColor: '#0f172a', scale: 2 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `BitTool_Export_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
+    }
+
+    sync(0n);
+</script>
+</body>
+</html>
