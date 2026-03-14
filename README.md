@@ -21,8 +21,9 @@ Developing firmware for systems often requires tedious bitmasking. This tool sim
 * **Instant C-Macro Generation:** Automatically calculates masks and positions (`_MSK` and `_POS`).
 * **Live Register Value:** View the hex/decimal value of the register as you toggle bits.
 * **Snapshot Export:** Save your register configuration as a PNG for documentation or Datasheet creation.
-* **Field Management:** * `Left-Click`: Edit bit field values.
-    * `Right-Click`: Rename fields for specific peripheral registers.
+* **Field Management:**
+  * `Left-Click`: Edit bit field values.
+  * `Right-Click`: Rename fields for specific peripheral registers.
 
 ## 📖 How to Use
 1.  **Define Fields:** Select a range of bits to group them into a named field.
