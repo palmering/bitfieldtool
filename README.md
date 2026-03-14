@@ -1,3 +1,6 @@
+![License](https://img.shields.io/github/license/palmering/bitfieldtool?color=blue)
+![Stars](https://img.shields.io/github/stars/palmering/bitfieldtool?style=social)
+![Top Language](https://img.shields.io/github/languages/top/palmering/bitfieldtool)
 # 🛠️ Bit Field Tool
 > A lightweight, web-based utility for defining and visualizing 32-bit registers and generating C-compatible macros.
 
@@ -12,7 +15,7 @@
 ---
 
 ## ✨ Overview
-Developing firmware for systems like the **iMXRT1064** often requires tedious bitmasking. This tool simplifies the process by allowing you to interactively map out registers and instantly get the `#define` macros you need for your C/C++ header files.
+Developing firmware for systems often requires tedious bitmasking. This tool simplifies the process by allowing you to interactively map out registers and instantly get the `#define` macros you need for your C/C++ header files.
 
 ## 🚀 Key Features
 * **Interactive Bit Mapping:** Toggle individual bits or define multi-bit fields with a click.
@@ -24,9 +27,8 @@ Developing firmware for systems like the **iMXRT1064** often requires tedious bi
 
 ## 📖 How to Use
 1.  **Define Fields:** Select a range of bits to group them into a named field.
-2.  **Label:** Provide a name for the register (e.g., `GPIO_AD_B0_05`).
-3.  **Toggle & Input:** Manually click bits or type a value into the input field to see the bit-pattern.
-4.  **Copy & Paste:** Grab the generated macros from the bottom panel and drop them into your project.
+2.  **Toggle & Input:** Manually click bits or type a value into the input field to see the bit-pattern.
+3.  **Copy & Paste:** Grab the generated macros from the bottom panel and drop them into your project.
 
 ## 💻 Technical Details
 This is a zero-dependency web tool hosted via **GitHub Pages**. 
