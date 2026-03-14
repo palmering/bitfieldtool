@@ -1,4 +1,3 @@
-![License](https://img.shields.io/github/license/palmering/bitfieldtool?color=blue)
 ![Stars](https://img.shields.io/github/stars/palmering/bitfieldtool?style=social)
 ![Top Language](https://img.shields.io/github/languages/top/palmering/bitfieldtool)
 # 🛠️ Bit Field Tool
@@ -41,3 +40,5 @@ This is a zero-dependency web tool hosted via **GitHub Pages**.
 <p align="center">
   <sub>Built for embedded engineers, firmware developers, and hardware enthusiasts.</sub>
 </p>
+## ⚖️ License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
