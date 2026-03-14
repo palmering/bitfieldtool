@@ -1,5 +1,7 @@
 BIT FIELD TOOL
 
+https://github.com/user-attachments/assets/91a20c43-5089-400c-9173-7ca3352a7977
+
 This tool allows you to view and configure registers up to 32 bits.
 
 How to use:
