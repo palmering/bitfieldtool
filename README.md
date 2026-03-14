@@ -3,6 +3,7 @@ BIT FIELD TOOL
 This tool allows you to view and configure registers up to 32 bits.
 
 How to use:
+
 Select bit fields: Define the specific bits for each field.
 
 Enter a name: Provide a label for your register or fields.
