@@ -35,10 +35,11 @@ This is a zero-dependency web tool hosted via **GitHub Pages**.
 * **Format:** Standard C-style `#define` outputs.
 * **Scope:** Supports up to 32-bit registers (Standard for ARM Cortex-M).
 
+## ⚖️ License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 ---
 
 <p align="center">
   <sub>Built for embedded engineers, firmware developers, and hardware enthusiasts.</sub>
 </p>
-## ⚖️ License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
