@@ -1,25 +1,41 @@
-BIT FIELD TOOL
-<h1 align="center">BIT FIELD TOOL</h1>
+# 🛠️ Bit Field Tool
+> A lightweight, web-based utility for defining and visualizing 32-bit registers and generating C-compatible macros.
 
-![Alt text for screen readers](https://github.com/user-attachments/assets/91a20c43-5089-400c-9173-7ca3352a7977)
-[![App Screenshot]([assets/screenshot.png](https://github.com/user-attachments/assets/91a20c43-5089-400c-9173-7ca3352a7977))](https://palmering.github.io/bitfieldtool/)
+<p align="center">
+  <a href="https://palmering.github.io/bitfieldtool/">
+    <img src="https://github.com/user-attachments/assets/91a20c43-5089-400c-9173-7ca3352a7977" alt="Bit Field Tool Screenshot" width="800">
+  </a>
+  <br>
+  <b><a href="https://palmering.github.io/bitfieldtool/">🚀 Launch Live Tool</a></b>
+</p>
 
-This tool allows you to view and configure registers up to 32 bits.
+---
 
-How to use:
+## ✨ Overview
+Developing firmware for systems like the **iMXRT1064** often requires tedious bitmasking. This tool simplifies the process by allowing you to interactively map out registers and instantly get the `#define` macros you need for your C/C++ header files.
 
-Select bit fields: Define the specific bits for each field.
+## 🚀 Key Features
+* **Interactive Bit Mapping:** Toggle individual bits or define multi-bit fields with a click.
+* **Instant C-Macro Generation:** Automatically calculates masks and positions (`_MSK` and `_POS`).
+* **Live Register Value:** View the hex/decimal value of the register as you toggle bits.
+* **Snapshot Export:** Save your register configuration as a PNG for documentation or Datasheet creation.
+* **Field Management:** * `Left-Click`: Edit bit field values.
+    * `Right-Click`: Rename fields for specific peripheral registers.
 
-Enter a name: Provide a label for your register or fields.
+## 📖 How to Use
+1.  **Define Fields:** Select a range of bits to group them into a named field.
+2.  **Label:** Provide a name for the register (e.g., `GPIO_AD_B0_05`).
+3.  **Toggle & Input:** Manually click bits or type a value into the input field to see the bit-pattern.
+4.  **Copy & Paste:** Grab the generated macros from the bottom panel and drop them into your project.
 
-Toggle bits: Set individual bit states or input the full register value directly.
+## 💻 Technical Details
+This is a zero-dependency web tool hosted via **GitHub Pages**. 
 
-Edit fields: Use Left-Click to change a bit field value and Right-Click to edit the field name.
+* **Format:** Standard C-style `#define` outputs.
+* **Scope:** Supports up to 32-bit registers (Standard for ARM Cortex-M).
 
-Clear All: Wipes all current content and resets the register.
+---
 
-Export Snapshot: Generates and downloads a screen capture in PNG format.
-
-Macro Output: The bottom panel displays the C-style macros, including the bitmask and bit position (#define).
-
-Copy Macros: Copies all generated macros to your clipboard.
+<p align="center">
+  <sub>Built for embedded engineers, firmware developers, and hardware enthusiasts.</sub>
+</p>
