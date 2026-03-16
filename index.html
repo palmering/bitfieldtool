@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>32-Bit Register Bitfield & Macro Generator | Embedded Utility</title>
-	<meta name="description" content="A free web tool for embedded programmers to configure 32-bit registers, visualize bitfields, and generate C macros.">
+    <title>BitTool - Pro Compact with Export</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -104,6 +103,14 @@
     <button class="btn" style="border-color: #f87171;" onclick="clearAll()">🗑 Clear All</button>
 </div>
 
+<div style="width: 100%; max-width: 1200px; margin-bottom: 20px;">
+    <input id="regName" oninput="updateMacroPreview()" value="REG_NAME" 
+        style="background: transparent; border: none; border-bottom: 2px solid var(--border); 
+        color: var(--accent); font-family: 'JetBrains Mono'; font-size: 28px; font-weight: 700; 
+        width: 100%; outline: none; text-transform: uppercase;" 
+        placeholder="ENTER REGISTER NAME...">
+</div>
+
 <div id="exportArea">
     <table class="hoverTable" id="bitTable">
         <tr>
@@ -136,9 +143,13 @@
             <td class="headerfield">BINARY</td>
         </tr>
 
-        <tr>
-            <td colspan="32">
+				<tr>
+            <td colspan="32" style="position: relative;">
                 <input id="bigentry" oninput="updateFromInput()" placeholder="0x... or decimal">
+                <button class="btn" id="copyHexBtn" onclick="copyHexValue()" 
+                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); padding: 5px 12px; font-size: 11px;">
+                    Copy Hex
+                </button>
             </td>
             <td class="headerfield">INPUT</td>
         </tr>
@@ -304,22 +315,39 @@
     
     function updateMacroPreview() {
         const preview = document.getElementById('macroPreview');
+        const rawRegName = document.getElementById('regName').value.trim() || "REG";
+        const regName = rawRegName.toUpperCase().replace(/\s+/g, '_');
+    
         if (fields.length === 0) {
-            preview.value = "// Define fields by dragging across the MASK row...";
+            preview.value = `// Define fields for ${regName} by dragging across the MASK row...`;
             return;
         }
     
-        let output = "/* Register Bitfield Definitions */\n";
+        let output = `/* ${regName} Register Bitfield Definitions */\n`;
         let previewFields = [...fields].sort((a, b) => b.high - a.high);
         
+        // 1. Generate C-Style Macros with Register Prefix
         previewFields.forEach(f => {
             let width = f.high - f.low + 1;
             let mask = (1n << BigInt(width)) - 1n;
             let hexMask = "0x" + (mask << BigInt(f.low)).toString(16).toUpperCase();
             let fieldName = f.name.toUpperCase().replace(/\s+/g, '_');
             
-            output += `\n#define ${fieldName}_MASK  ${hexMask}\n`;
-            output += `#define ${fieldName}_SHIFT ${f.low}\n`;
+            output += `\n#define ${regName}_${fieldName}_MASK  ${hexMask}\n`;
+            output += `#define ${regName}_${fieldName}_SHIFT ${f.low}\n`;
+        });
+    
+        // 2. Generate Descriptive Comments
+        output += `\n/* ${regName} Field Descriptions */\n`;
+        previewFields.forEach(f => {
+            let width = f.high - f.low + 1;
+            let mask = (1n << BigInt(width)) - 1n;
+            let fVal = (currentVal >> BigInt(f.low)) & mask;
+            
+            let binVal = fVal.toString(2).padStart(width, '0');
+            let hexVal = "0x" + fVal.toString(16).toUpperCase();
+            
+            output += `// ${f.name} Bits ${f.high}-${f.low}: ${binVal} (${hexVal})\n`;
         });
     
         preview.value = output;
@@ -392,27 +420,56 @@
         sync(val);
     }
 
-    function updateFromInput() {
+		function updateFromInput() {
+        let input = document.getElementById('bigentry').value.trim();
+        if(input === "" || input === "0x") {
+            sync(0n);
+            return;
+        }
+        
         try {
-            let input = document.getElementById('bigentry').value;
-            if(!input) return;
             let val = input.toLowerCase().startsWith('0x') ? BigInt(input) : BigInt(input);
             sync(val);
-        } catch(e) {}
+        } catch(e) {
+            // Silently fail while typing to allow for incomplete hex like "0xG" 
+            // being corrected to "0xA" without an alert popping up.
+        }
     }
 
-    function sync(val) {
+		function sync(val) {
         currentVal = val & 0xFFFFFFFFn;
         let hex = currentVal.toString(16).padStart(8, '0').toUpperCase();
+        
+        // Update input ONLY if the user isn't currently typing in it
+        const entry = document.getElementById('bigentry');
+        if (document.activeElement !== entry) {
+            entry.value = "0x" + hex;
+        }
+
         for(let i=0; i<8; i++) document.getElementById(`nibble_${7-i}`).innerText = hex[i];
         for(let i=0; i<32; i++) document.getElementById(`cb_${i}`).checked = !!(currentVal & (1n << BigInt(i)));
         renderFields();
     }
 
-    function clearAll() {
+		function clearAll() {
+				if (!confirm("Are you sure you want to clear all fields and the register name?")) {
+            return;
+        }
+        // 1. Clear the field definitions
         fields = [];
+        
+        // 2. Reset the Register Name input
+        const regInput = document.getElementById('regName');
+        regInput.value = 'REG_NAME'; 
+        
+        // 3. Clear the Hex/Dec input box
         document.getElementById('bigentry').value = '';
-        sync(0n);
+        
+        // 4. Reset the bit values to 0 and refresh the UI
+        sync(0n); 
+        
+        // sync() calls renderFields() which calls updateMacroPreview(), 
+        // so everything is now fully reset.
     }
 
     function exportImage() {
@@ -424,7 +481,27 @@
             link.click();
         });
     }
+		
+		function copyHexValue() {
+        const hexInput = document.getElementById('bigentry');
+        const btn = document.getElementById('copyHexBtn');
+        
+        // Ensure we have a value to copy (default to 0x0 if empty)
+        let valToCopy = hexInput.value || "0x" + currentVal.toString(16).toUpperCase();
 
+        navigator.clipboard.writeText(valToCopy).then(() => {
+            const originalText = "Copy Hex";
+            btn.innerText = "Copied!";
+            btn.style.borderColor = "#4ade80";
+            btn.style.color = "#4ade80";
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.borderColor = "var(--accent)";
+                btn.style.color = "var(--text)";
+            }, 2000);
+        });
+    }
     sync(0n);
 </script>
 </body>
